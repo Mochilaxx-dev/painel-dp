@@ -3,7 +3,7 @@ from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-# Configuração visual e tema da página
+# Configuração visual do tema da página
 st.set_page_config(
     page_title="Gestão Avançada DP - Erick", 
     layout="wide", 
@@ -11,25 +11,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilização CSS Customizada para o tema Premium (Dark Mode)
-st.markdown("""
-<style>
-    .stApp { background-color: #121620; color: #E2E8F0; }
-    section[data-testid="stSidebar"] { background-color: #1A202C !important; }
-    .metric-card {
-        background-color: #1E293B; border-radius: 10px; padding: 15px; margin-bottom: 10px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-left: 5px solid #3B82F6;
-    }
-    .task-card {
-        background-color: #1E293B; border-radius: 12px; padding: 20px; margin-bottom: 15px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #2D3748;
-    }
-    .priority-high { border-left: 6px solid #EF4444 !important; }
-    .priority-medium { border-left: 6px solid #F59E0B !important; }
-    .priority-low { border-left: 6px solid #10B981 !important; }
-    .status-done { border-left: 6px solid #4B5563 !important; opacity: 0.6; }
-</style>
-""", unsafe_allow_html=True)
+# Configurando o estilo escuro nativo simplificado para evitar quebras no chat
+st.markdown("<style>.stApp { background-color: #121620; color: #E2E8F0; }</style>", unsafe_allow_html=True)
 
 # 🔒 1. CONEXÃO COM O FIREBASE ONLINE
 if not firebase_admin._apps:
@@ -41,31 +24,31 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
-# Dicionário de dados reais dos clientes de DP [1]
+# Dicionário de dados reais dos clientes de DP extraídos da sua planilha
 DICIONARIO_EMPRESAS = {
-    "PITANGUI COMERCIO VAREGISTA": {"id": "47", "doc": "07.015.627/0001-65", "sistema": "NUVEM", "emails": ["cecilia@malaamada.com.br", "carmelialeite@terra.com.br"]},
-    "POOL RIO SUL": {"id": "70", "doc": "31.445.010/0001-64", "sistema": "ALTERDATA-PACK", "emails": ["drfassessoriaempresarial@gmail.com"]},
-    "POSTO 09 ACESSORIOS DE COURO": {"id": "73", "doc": "12.582.488/0001-91", "sistema": "NUVEM", "emails": ["cecilia@malaamada.com.br", "carmelialeite@terra.com.br"]},
-    "TERMIC SOLUÇÃO": {"id": "82", "doc": "37.757.873/0001-53", "sistema": "ALTERDATA-PACK", "emails": ["drfassessoriaempresarial@gmail.com"]},
-    "SAUL DOMESTICA": {"id": "147", "doc": "289.946.047-15", "sistema": "E-SOCIAL", "emails": ["saul.bteshe@gmail.com", "marilubt@gmail.com"]},
-    "DAISY MIRIAM": {"id": "255", "doc": "768.613.687-68", "sistema": "E-SOCIAL", "emails": ["glauallevato@gmail.com", "daisylontra@yahoo.com.br"]},
-    "LUSO FINANCIAL - MATRIZ": {"id": "256", "doc": "41.846.157/0001-10", "sistema": "NUVEM", "emails": ["antoniopedro2205@gmail.com", "LUSOFINANCIAL@gmail.com"]},
-    "ROUTE 164 APOIO": {"id": "257", "doc": "36.295.032/0001-09", "sistema": "DP", "emails": ["mariana.parada971@gmail.com"]},
-    "QUINTAL MINEIRO": {"id": "262", "doc": "51.776.798/0001-07", "sistema": "NUVEM", "emails": ["WHATSAPP"]},
-    "PROSPERCLOUD": {"id": "265", "doc": "52.572.163/0001-42", "sistema": "NUVEM", "emails": ["taraujo@iuven.com.br"]},
-    "LUSO FINANCIAL - FILIAL": {"id": "266", "doc": "41.846.157/0002-09", "sistema": "NUVEM", "emails": ["antoniopedro2205@gmail.com", "LUSOFINANCIAL@gmail.com"]},
-    "RIO ROUTE 164": {"id": "275", "doc": "53.534.062/0001-40", "sistema": "DP", "emails": ["mariana.parada971@gmail.com"]},
-    "BRENO DIAS": {"id": "276", "doc": "57.689.701/0001-05", "sistema": "NUVEM", "emails": ["drfassessoriaempresarial@gmail.com"]},
-    "DRG": {"id": "277", "doc": "32.428.537/0001-43", "sistema": "DP", "emails": ["contabilidade@drgcontabil.com.br"]},
-    "CECILIA VIANNA  BUFFET": {"id": "278", "doc": "55.743.638/0001-04", "sistema": "NUVEM", "emails": ["dinners.rio@gmail.com"]},
-    "LADEIRA ENGENHARIA": {"id": "281", "doc": "62.633.165/0001-58", "sistema": "NUVEM", "emails": ["drfassessoriaempresarial@gmail.com"]},
-    "TREFFE SOLUÇÕES": {"id": "289", "doc": "37.258.219/0001-03", "sistema": "NUVEM", "emails": ["drfassessoriaempresarial@gmail.com"]},
-    "CONTROLADORA CARIOCA": {"id": "290", "doc": "12.136.666/0001-50", "sistema": "NUVEM", "emails": ["drfassessoriaempresarial@gmail.com"]},
-    "FISIOLAR FISIOTERAPIA": {"id": "291", "doc": "59.240.190/0001-67", "sistema": "NUVEM", "emails": ["drfassessoriaempresarial@gmail.com"]},
-    "TRUZZI SERVICOS PSIQUIATRICOS": {"id": "293", "doc": "68.048.796/0001-96", "sistema": "NUVEM", "emails": ["drfassessoriaempresarial@gmail.com"]},
-    "FABIO MARIANO": {"id": "DOM-1", "doc": "081.356.647-96", "sistema": "E-SOCIAL", "emails": ["FABIOHM16@GMAIL.COM"]},
-    "JOSE ANTONIO": {"id": "DOM-2", "doc": "700.478.717-68", "sistema": "E-SOCIAL", "emails": ["jafsouto@gmail.com"]},
-    "ALEXINA": {"id": "DOM-3", "doc": "510.496.607-06", "sistema": "E-SOCIAL", "emails": ["chicamype@icloud.com"]}
+    "PITANGUI COMERCIO VAREGISTA": {"id": "47", "doc": "07.015.627/0001-65", "sistema": "NUVEM"},
+    "POOL RIO SUL": {"id": "70", "doc": "31.445.010/0001-64", "sistema": "ALTERDATA-PACK"},
+    "POSTO 09 ACESSORIOS DE COURO": {"id": "73", "doc": "12.582.488/0001-91", "sistema": "NUVEM"},
+    "TERMIC SOLUÇÃO": {"id": "82", "doc": "37.757.873/0001-53", "sistema": "ALTERDATA-PACK"},
+    "SAUL DOMESTICA": {"id": "147", "doc": "289.946.047-15", "sistema": "E-SOCIAL"},
+    "DAISY MIRIAM": {"id": "255", "doc": "768.613.687-68", "sistema": "E-SOCIAL"},
+    "LUSO FINANCIAL - MATRIZ": {"id": "256", "doc": "41.846.157/0001-10", "sistema": "NUVEM"},
+    "ROUTE 164 APOIO": {"id": "257", "doc": "36.295.032/0001-09", "sistema": "DP"},
+    "QUINTAL MINEIRO": {"id": "262", "doc": "51.776.798/0001-07", "sistema": "NUVEM"},
+    "PROSPERCLOUD": {"id": "265", "doc": "52.572.163/0001-42", "sistema": "NUVEM"},
+    "LUSO FINANCIAL - FILIAL": {"id": "266", "doc": "41.846.157/0002-09", "sistema": "NUVEM"},
+    "RIO ROUTE 164": {"id": "275", "doc": "53.534.062/0001-40", "sistema": "DP"},
+    "BRENO DIAS": {"id": "276", "doc": "57.689.701/0001-05", "sistema": "NUVEM"},
+    "DRG": {"id": "277", "doc": "32.428.537/0001-43", "sistema": "DP"},
+    "CECILIA VIANNA  BUFFET": {"id": "278", "doc": "55.743.638/0001-04", "sistema": "NUVEM"},
+    "LADEIRA ENGENHARIA": {"id": "281", "doc": "62.633.165/0001-58", "sistema": "NUVEM"},
+    "TREFFE SOLUÇÕES": {"id": "289", "doc": "37.258.219/0001-03", "sistema": "NUVEM"},
+    "CONTROLADORA CARIOCA": {"id": "290", "doc": "12.136.666/0001-50", "sistema": "NUVEM"},
+    "FISIOLAR FISIOTERAPIA": {"id": "291", "doc": "59.240.190/0001-67", "sistema": "NUVEM"},
+    "TRUZZI SERVICOS PSIQUIATRICOS": {"id": "293", "doc": "68.048.796/0001-96", "sistema": "NUVEM"},
+    "FABIO MARIANO": {"id": "DOM-1", "doc": "081.356.647-96", "sistema": "E-SOCIAL"},
+    "JOSE ANTONIO": {"id": "DOM-2", "doc": "700.478.717-68", "sistema": "E-SOCIAL"},
+    "ALEXINA": {"id": "DOM-3", "doc": "510.496.607-06", "sistema": "E-SOCIAL"}
 }
 
 lista_empresas_cadastradas = sorted(list(DICIONARIO_EMPRESAS.keys()))
@@ -98,7 +81,7 @@ if botao_enviar and mensagem_texto:
             st.sidebar.success("✨ Sincronizado com o Firebase Cloud!")
 
 # -----------------------------------------------------------------------------------------
-# CENTRAL PRINCIPAL - DASHBOARD DE PRIVACIDADE E MÉTRICAS
+# CENTRAL PRINCIPAL - DASHBOARD DE PRIVACIDADE E FILAS
 # -----------------------------------------------------------------------------------------
 st.markdown("# 🚀 Hub de Operações - Departamento Pessoal")
 st.markdown("Controle unificado de demandas com inteligência artificial e nuvem protegida.")
@@ -111,18 +94,18 @@ try:
 except:
     demandas_online = []
 
-# BLOCO DE INDICADORES (MÉTRICAS DO DIA)
+# BLOCO DE INDICADORES NATIVOS DO STREAMLIT
 tot_pendentes = len([d for d in demandas_online if d.get('status') == "Aguardando Resposta"])
 tot_urgentes = len([d for d in demandas_online if "Alta" in d.get('prioridade', '') and d.get('status') == "Aguardando Resposta"])
 tot_concluidos = len([d for d in demandas_online if "Concluído" in d.get('status', '')])
 
 m1, m2, m3 = st.columns(3)
 with m1:
-    st.markdown(f'<div class="metric-card" style="border-left-color: #F59E0B;"><h3>⏳ Pendentes</h3><h2>{tot_pendentes} chamados</h2></div>', unsafe_allow_html=True)
+    st.metric(label="⏳ Chamados Pendentes", value=f"{tot_pendentes} ativos")
 with m2:
-    st.markdown(f'<div class="metric-card" style="border-left-color: #EF4444;"><h3>🔴 Críticos</h3><h2>{tot_urgentes} urgências</h2></div>', unsafe_allow_html=True)
+    st.metric(label="🔴 Demandas Críticas", value=f"{tot_urgentes} urgências")
 with m3:
-    st.markdown(f'<div class="metric-card" style="border-left-color: #10B981;"><h3>✅ Finalizados Hoje</h3><h2>{tot_concluidos} baixas</h2></div>', unsafe_allow_html=True)
+    st.metric(label="✅ Finalizados Hoje", value=f"{tot_concluidos} baixas")
 
 # 🔒 BARREIRA DE PRIVACIDADE
 st.markdown("### 🛡️ Filtro de Visualização por Empresa")
@@ -144,23 +127,33 @@ else:
         emp_nome = d.get('empresa', 'Desconhecido')
         info_fixa = DICIONARIO_EMPRESAS.get(emp_nome, {"id": "-", "doc": "Não cadastrado", "sistema": "Não informado"})
         
-        # Define a classe visual com base no status e prioridade
-        if d.get('status') != "Aguardando Resposta":
-            classe_card = "task-card status-done"
-        elif "Alta" in d.get('prioridade', ''):
-            classe_card = "task-card priority-high"
-        elif "Baixa" in d.get('prioridade', ''):
-            classe_card = "task-card priority-low"
-        else:
-            classe_card = "task-card priority-medium"
+        # Renderização do cartão estruturada puramente através de componentes nativos do Streamlit
+        with st.container(border=True):
+            col_titulo, col_cod = st.columns([4, 1])
+            with col_titulo:
+                st.markdown(f"### 🏢 {emp_nome}")
+            with col_cod:
+                st.markdown(f"**Cód/Ref:** `{info_fixa['id']}`")
+                
+            st.markdown(f"📋 **Doc:** {info_fixa['doc']} | 💻 **Sistema:** `{info_fixa['sistema']}` | 🌐 **Canal:** {d.get('canal', 'E-mail')}")
+            st.markdown("---")
+            st.info(f"💡 **Demanda Identificada:** {d.get('descricao', 'Sem descrição')}")
+            st.caption(f"📅 Capturado em: {d.get('data', '')} | Prioridade Técnica: {d.get('prioridade', '🟢 Média')}")
             
-        st.markdown(f"""
-        <div class="{classe_card}">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0; color: #F8FAFC;">🏢 {emp_nome}</h3>
-                <span style="background: #2D3748; padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #CBD5E1;">🆔 Cód/Ref: {info_fixa['id']}</span>
-            </div>
-            <p style="margin: 5px 0; font-size: 13px; color: #94A3B8;">
-                📋 <b>Doc:</b> {info_fixa['doc']} | 💻 <b>Sistema:</b> <code style="color: #60A5FA;">{info_fixa['sistema']}</code> | 🌐 <b>Canal:</b> {d.get('canal', 'E-mail')}
-            </p>
-            <hr style="border: 0; border-top: 1px solid #2D3748; margin: 10px 0;">
+            # Área de ações operacionais e baixa
+            if d.get('status') == "Aguardando Resposta":
+                c_exec, c_btn = st.columns([4, 1])
+                with c_exec:
+                    resposta_dp = st.text_input("Registrar ação executada:", key=f"resp_{d['id_documento']}", label_visibility="collapsed", placeholder="Escreva a resolução técnica aqui...")
+                with c_btn:
+                    if st.button("Dar Baixa", key=f"btn_{d['id_documento']}", use_container_width=True):
+                        if resposta_dp:
+                            resultado_baixa = agente_auditor_baixa(resposta_dp)
+                            novo_status = "🟢 Concluído" if resultado_baixa.get("fechar_tarefa", False) else "Aguardando Resposta"
+                            db.collection("chamados").document(d['id_documento']).update({"status": novo_status})
+                            st.rerun()
+            else:
+                st.success("✅ Atendimento Finalizado")
+                if st.button("↩️ Reabrir Chamado", key=f"reabrir_{d['id_documento']}"):
+                    db.collection("chamados").document(d['id_documento']).update({"status": "Aguardando Resposta"})
+                    st.rerun()
