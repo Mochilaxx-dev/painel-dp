@@ -24,6 +24,39 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 
+# Receptor Oculto de E-mails do Make
+from flask import Flask, request, jsonify
+import threading
+
+app_webhook = Flask(__name__)
+
+@app_webhook.route('/webhook', methods=['POST'])
+def receber_demanda_email():
+    try:
+        dados = request.get_json()
+        if dados:
+            nova_tarefa = {
+                "empresa": dados.get("empresa", "Desconhecido"),
+                "canal": "E-mail",
+                "descricao": dados.get("descricao", "Sem descrição"),
+                "data": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "status": "Aguardando Resposta",
+                "prioridade": dados.get("prioridade", "🟢 Média"),
+                "timestamp": datetime.now()
+            }
+            db.collection("chamados").add(nova_tarefa)
+            return jsonify({"status": "sucesso"}), 200
+    except:
+        return jsonify({"status": "erro"}), 500
+    return jsonify({"status": "sem dados"}), 400
+
+if 'webhook_iniciado' not in st.session_state:
+    def rodar_servidor_rede():
+        app_webhook.run(port=5000, debug=False, use_reloader=False)
+    t = threading.Thread(target=rodar_servidor_rede)
+    t.daemon = True
+    t.start()
+    st.session_state.webhook_iniciado = True
 # Dicionário de dados reais dos clientes de DP extraídos da sua planilha
 DICIONARIO_EMPRESAS = {
     "PITANGUI COMERCIO VAREGISTA": {"id": "47", "doc": "07.015.627/0001-65", "sistema": "NUVEM"},
